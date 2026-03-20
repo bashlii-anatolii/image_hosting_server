@@ -331,7 +331,7 @@ body {
 }
 
 .file-col-name {
-    flex-basis: 35%;
+    flex-basis: 55%;
 }
 
 .file-col-url {
@@ -347,9 +347,24 @@ body {
 
 /* File icon */
 .file-icon {
+    display: flex;
+    gap: 8px;
     color: #0060ff;
-    margin-right: 15px;
+    margin-right: 20px;
     font-size: 20px;
+}
+
+.file-icon img {
+    display: block;
+}
+
+.image-preview {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 4px;
+    vertical-align: middle;
+    border: 1px solid #ddd;
 }
 
 .delete-img {
