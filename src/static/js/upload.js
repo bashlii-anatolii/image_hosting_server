@@ -33,46 +33,92 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const storedFiles = JSON.parse(localStorage.getItem('uploadedImages')) || [];
+
+                const getNextImageNumber = () =>
+                    storedFiles.filter(f => f.displayName && f.displayName.startsWith('image')).length + 1;
+
+                const ext = file.name.substring(file.name.lastIndexOf('.'));
+
+                const displayName = `image${String(getNextImageNumber()).padStart(2, '0')}${ext}`;
+
+                storedFiles.push({
+                    name: data.filename,
+                    displayName: displayName,
+                    originalName: file.name,
+                    url: `https://image-hosting-server.com/${data.filename}`
+                });
+
+                localStorage.setItem('uploadedImages', JSON.stringify(storedFiles));
+
+                if (currentUploadInput) {
+                    currentUploadInput.value = `https://image-hosting-server.com/${data.filename}`;
+                }
+
+                showMessage('File uploaded successfully!');
+            } else {
+                showMessage(data.message || 'Upload failed.', true);
+            }
+
+        } catch (err) {
+            console.error(err);
+            showMessage('Something went wrong. Please try again.', true);
+        }
+    };
+
     // validator
-    const handleAndStoreFiles = (files) => {
+    const handleAndStoreFiles = async (files) => {
         const promptElement = document.querySelector('.upload__promt');
         const originalText = promptElement.innerText;
 
         if (!files || files.length === 0) return;
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        const MAX_SIZE_MB = 5;
-        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-
         let addedCount = 0;
         let errorMsg = "";
 
-        const storedFiles = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-
         for (const file of files) {
-            if (!allowedTypes.includes(file.type)) {
-                errorMsg = "Error: Only image!";
-                continue;
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addedCount++;
+
+                    if (currentUploadInput) {
+                        currentUploadInput.value = result.url;
+                    }
+
+                } else {
+                    errorMsg = result.message;
+                }
+
+            } catch (e) {
+                errorMsg = "Server error";
             }
-
-            if (file.size > MAX_SIZE_BYTES) {
-                errorMsg = "Error: File more 5Mb!";
-                continue;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                storedFiles.push({ name: file.name, url: event.target.result });
-                localStorage.setItem('uploadedImages', JSON.stringify(storedFiles));
-                if (typeof updateTabStyles === 'function') updateTabStyles();
-            };
-            reader.readAsDataURL(file);
-
-            addedCount++;
         }
 
         if (addedCount > 0 && !errorMsg) {
-            promptElement.innerText = `✅ Successfully downloaded: ${addedCount}`;
+            promptElement.innerText = `✅ Successfully uploaded: ${addedCount}`;
             promptElement.style.color = "#2ecc71";
         } else if (addedCount > 0 && errorMsg) {
             promptElement.innerText = `⚠️ Added ${addedCount}, part with error`;
