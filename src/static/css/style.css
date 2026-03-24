@@ -404,3 +404,53 @@ body {
     opacity: 0.7;
     /* Make the icon semi-transparent for user feedback */
 }
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+    margin-bottom: 30px
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 6px;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid #d6dcf5;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: rgb(0, 96, 255);
+    color: white;
+    border-color: rgb(0, 96, 255);
+}
+
+.pagination-page.active {
+    background-color: rgb(0, 96, 255);
+    color: white;
+    border-color: rgb(0, 96, 255);
+    cursor: default;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-prev,
+.pagination-next {
+    font-weight: bold;
+}

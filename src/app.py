@@ -98,7 +98,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             parsed = urlparse(self.path)
             params = parse_qs(parsed.query)
             page = int(params.get('page', [1])[0])
-            images, total = db.get_all_images(page=page)
+            images, total = db.get_all_images(page=page, per_page=10)
 
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -107,7 +107,8 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                 'success': True,
                 'images': [dict(img) for img in images],
                 'total': total,
-                'page': page
+                'page': page,
+                'page_size': 10
             }, default=str).encode('utf-8'))
 
         except Exception as e:

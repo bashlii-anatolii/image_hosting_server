@@ -15,17 +15,104 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const ITEMS_PER_PAGE = 10;
+    let currentPage = 1;
+    let totalImages = 0;
+
+    const renderPagination = () => {
+        const existingPagination = document.getElementById('pagination-wrapper');
+        if (existingPagination) existingPagination.remove();
+
+        const totalPages = Math.ceil(totalImages / ITEMS_PER_PAGE);
+        if (totalPages <= 1) return;
+
+        const pagination = document.createElement('div');
+        pagination.id = 'pagination-wrapper';
+        pagination.className = 'pagination-wrapper';
+
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'pagination-btn pagination-prev';
+        prevBtn.innerHTML = '&larr;';
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                displayFiles();
+            }
+        });
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'pagination-btn pagination-next';
+        nextBtn.innerHTML = '&rarr;';
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayFiles();
+            }
+        });
+
+        const pageNumbers = document.createElement('div');
+        pageNumbers.className = 'pagination-pages';
+
+        const createPageBtn = (page) => {
+            const btn = document.createElement('button');
+            btn.className = 'pagination-btn pagination-page' + (page === currentPage ? ' active' : '');
+            btn.textContent = page;
+            btn.addEventListener('click', () => {
+                if (page !== currentPage) {
+                    currentPage = page;
+                    displayFiles();
+                }
+            });
+            return btn;
+        };
+
+        const addEllipsis = () => {
+            const span = document.createElement('span');
+            span.className = 'pagination-ellipsis';
+            span.textContent = '…';
+            pageNumbers.appendChild(span);
+        };
+
+        if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) {
+                pageNumbers.appendChild(createPageBtn(i));
+            }
+        } else {
+            pageNumbers.appendChild(createPageBtn(1));
+            if (currentPage > 3) addEllipsis();
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+            for (let i = start; i <= end; i++) {
+                pageNumbers.appendChild(createPageBtn(i));
+            }
+            if (currentPage < totalPages - 2) addEllipsis();
+            pageNumbers.appendChild(createPageBtn(totalPages));
+        }
+
+        pagination.appendChild(prevBtn);
+        pagination.appendChild(pageNumbers);
+        pagination.appendChild(nextBtn);
+
+        fileListWrapper.after(pagination);
+    };
+
     const displayFiles = async () => {
         fileListWrapper.innerHTML = '';
 
         try {
-            const response = await fetch('/api/images');
+            const response = await fetch(`/api/images?page=${currentPage}`);
             const result = await response.json();
 
             if (!result.success || result.images.length === 0) {
                 fileListWrapper.innerHTML = '<p class="upload__promt" style="text-align: center; margin-top: 50px;">No images uploaded yet.</p>';
+                totalImages = 0;
+                renderPagination();
                 return;
             }
+
+            totalImages = result.total;
 
             const container = document.createElement('div');
             container.className = 'file-list-container';
@@ -63,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             container.appendChild(list);
             fileListWrapper.appendChild(container);
+            renderPagination();
             addDeleteListeners();
 
         } catch (error) {
@@ -83,6 +171,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await response.json();
 
                     if (result.success) {
+                        // If we deleted the last item on a page > 1, go back one page
+                        const totalPages = Math.ceil((totalImages - 1) / ITEMS_PER_PAGE);
+                        if (currentPage > totalPages && currentPage > 1) {
+                            currentPage--;
+                        }
                         displayFiles();
                     } else {
                         console.error('Failed to delete:', result.message);
