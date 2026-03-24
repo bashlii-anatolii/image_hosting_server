@@ -13,13 +13,6 @@ db = DatabaseManager()
 
 class ImageServerHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/images":
-            self.send_response(200)
-            self.send_header("Content-type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(list_images_with_preview()).encode())
-            return
-
         routes = {
             "/": "index.html",
             "/upload": "upload.html",
@@ -44,7 +37,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         if self.path.startswith("/api/images"):
-            self.handle_delete_images()
+            self.handle_delete_image()
         else:
             self.send_response(404)
             self.end_headers()

@@ -51,16 +51,17 @@ class DatabaseManager:
                     ORDER BY upload_time DESC
                     LIMIT %s OFFSET %s
                 """, (per_page, offset))
-                images = cursor.fetchone()["count"]
+                images = cursor.fetchall()
 
                 cursor.execute("SELECT COUNT(*) FROM images")
                 total = cursor.fetchone()["count"]
+
                 return images, total
         except Exception as e:
             print(f"Retrieval error: {e}")
             return [], 0
 
-    def delete_images(self, image_id):
+    def delete_image(self, image_id):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute("SELECT filename FROM images WHERE id = %s", (image_id,))
