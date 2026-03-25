@@ -20,6 +20,7 @@ services:
       - .env
     volumes:
       - ./images:/images
+      - ./logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
